@@ -109,25 +109,31 @@ sudo apt install nvidia-driver-○○○
 
 
 # docker, nvidia-docker2, rockerのインストール
-`bash setup.sh`と入れると、docker、nvidia-docker2、rockerが自動でインストールされる。
+
+`bash install_prerequired.sh`と入れると、docker、nvidia-docker2、rockerが自動でインストールされる。 
 
 
-# Dockerfileのビルド
-ros2 humbleを入れる場合には、以下を実行する。それ以外のros2のバージョンを入れたい場合は、ROS_DISTRO=humbleの部分を変更する(ROS_DISTRO=galacticなど)。
+# Dockerfileのイメージビルド
 
-`docker build --build-arg ROS_DISTRO=humble -t ros2_humble .`
+ros2 humbleを入れる場合には、以下を実行する。
 
-今回のイメージはbaseイメージがUbuntu20.04なので、humble以外のバージョンを入れる場合は、Dockerfile冒頭のFROMの部分を変更する必要がある(UbuntuとROS2の対応関係は「ros2 distributions」とでも調べておくこと)。
+`bash build_Dockerfile.sh`
 
+初回だと20~30分ほどかかるので、気長に待とう。（2回目以降はキャッシュを用いて早く行われる）
 
-# イメージの作成
-以下のコマンドを実行。
+完了後、`docker images ls -a`を入れると、以下のように`ros2_humble`というイメージが作成されていることが確認できる。
 
-<!-- TODO: bash create_img.shで済むよう変更 -->
-`rocker --nvidia --x11 --user --network host --privileged --nocleanup --git --name humble ros2_humble:latest`
+`build_Dockerfile.sh`の`IMAGE_NAME`を変更して、新たなイメージを作成することもできる。
 
-なんか`Extension volume doesn't support default arguments`と一見エラーメッセージっぽいのが出てくるが、無視していいっぽい。
-1~2分待つと、ros2のコンテナが立ち上がり、自動的にbashが立ち上がる（=作成したコンテナに入る）。
+# コンテナの作成
+
+`bash create_container.sh`を実行すると、`ros2_humble`という名前のコンテナが作成される。
+
+以降は`docker start ros2_humble`でコンテナに入ってterminatorを起動できる。
+
+終了するときは、ホスト側に`docker stop ros2_humble`を入れる。
+
+Ctrl+CやCtrl+D、他にもCtrl+P→Ctrl+Qなどでコンテナから抜けることはできるが、コンテナ自体はバックグラウンドで動いたままなので、`docker stop ros2_humble`を入れてコンテナを停止させること。
 
 # 動作確認
 さきほどイメージを作成した際に自動でコンテナに入っているので、以下のコマンドを実行して動作確認を行う。
