@@ -1,24 +1,24 @@
 #!/bin/bash
 
-# ディストリビューションの指定（引数で受け取るか、デフォルトを使用）
-# 必要な変数をエクスポートして、全プロセスで使えるようにする
-ROS_DISTRO="humble"
-IMAGE_NAME="ros2_${ROS_DISTRO}"
-HOST_WORKSPACE_DIR="$HOME/ros_ws/${IMAGE_NAME}"
-CONTAINER_WORKSPACE_DIR="/root/ros_ws/"
-
-DEV_WS="$HOME/dev_ws"
+# config.shの読み込み
+source config.sh
 
 # 必要なディレクトリの作成
 echo "Creating necessary directories for ROS ${ROS_DISTRO}..."
-mkdir -p ${HOST_WORKSPACE_DIR}/build
-mkdir -p ${HOST_WORKSPACE_DIR}/install
-mkdir -p ${HOST_WORKSPACE_DIR}/log
-mkdir -p ${HOST_WORKSPACE_DIR}/src
+mkdir -p ${HOST_WORKSPACE}/build
+mkdir -p ${HOST_WORKSPACE}/install
+mkdir -p ${HOST_WORKSPACE}/log
+mkdir -p ${HOST_WORKSPACE}/src
 mkdir -p ${DEV_WS}/config/terminator
 echo ""
 
 # Dockerfileの実行
 echo "Building Image..."
-docker build -t ${IMAGE_NAME} --build-arg ROS_DISTRO=${ROS_DISTRO} --build-arg CONTAINER_WORKSPACE_DIR=${CONTAINER_WORKSPACE_DIR} --build-arg IMAGE_NAME=${IMAGE_NAME} .
+echo BASE_IMAGE=${BASE_IMAGE}
+echo ROS_DISTRO=${ROS_DISTRO}
+echo CONTAINER_WORKSPACE=${CONTAINER_WORKSPACE}
+echo IMAGE_NAME=${IMAGE_NAME}
+
+docker build -t ${IMAGE_NAME} --build-arg BASE_IMAGE=${BASE_IMAGE} --build-arg ROS_DISTRO=${ROS_DISTRO} --build-arg CONTAINER_NAME=${CONTAINER_NAME} --build-arg CONTAINER_WORKSPACE=${CONTAINER_WORKSPACE} .
+
 echo "Image built successfully!"

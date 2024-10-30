@@ -1,24 +1,21 @@
 #!/bin/bash
 
-CONTAINER_NAME="ros2_humble_test"
-IMAGE_NAME="ros2_humble"
-
-WORKSPACE_DIR="$HOME/ros_ws/${IMAGE_NAME}"
-CONTAINER_COLCON_WS="/root/colcon_ws"
-DEV_WS="$HOME/dev_ws"
+# config.shの読み込み
+source config.sh
 
 # rockerコマンドの実行（ディストリビューションごとのコンテナを立ち上げ）
 # コンテナ間の共有メモリのデバイスファイルをマウントすることでコンテナ間の通信が可能
 echo "Starting rocker with ${CONTAINER_NAME} and Terminator config..."
 rocker --nvidia --x11 --network host --privileged --nocleanup --name ${CONTAINER_NAME} \
   ${IMAGE_NAME}:latest \
-  --volume ${WORKSPACE_DIR}/build:${CONTAINER_COLCON_WS}/build \
-  --volume ${WORKSPACE_DIR}/install:${CONTAINER_COLCON_WS}/install \
-  --volume ${WORKSPACE_DIR}/log:${CONTAINER_COLCON_WS}/log \
-  --volume ${WORKSPACE_DIR}/src:${CONTAINER_COLCON_WS}/src \
+  --volume ${HOST_WORKSPACE}/build:${CONTAINER_WORKSPACE}/build \
+  --volume ${HOST_WORKSPACE}/install:${CONTAINER_WORKSPACE}/install \
+  --volume ${HOST_WORKSPACE}/log:${CONTAINER_WORKSPACE}/log \
+  --volume ${HOST_WORKSPACE}/src:${CONTAINER_WORKSPACE}/src \
   --volume ${DEV_WS}/config/terminator:/root/.config/terminator \
   --volume=/dev/shm:/dev/shm:rw \
   --volume=/dev:/dev \
-  --env ROS_DISTRO=humble \
+  --env BASE_IMAGE=${BASE_IMAGE} \
+  --env ROS_DISTRO=${ROS_DISTRO} \
   --env IMAGE_NAME=${IMAGE_NAME} \
-  --env CONTAINER_WORKSPACE_DIR=${CONTAINER_COLCON_WS} 
+  --env CONTAINER_WORKSPACE=${CONTAINER_WORKSPACE} 

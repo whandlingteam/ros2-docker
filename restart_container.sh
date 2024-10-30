@@ -1,5 +1,6 @@
 #!/bin/bash
 
-IMAGE_NAME="ros2_humble"
+# config.shの読み込み
+source config.sh
 
-docker exec -it ${IMAGE_NAME} /start_terminator.sh
+docker exec -it ${CONTAINER_NAME} /start_terminator.sh

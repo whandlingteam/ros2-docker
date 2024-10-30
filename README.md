@@ -11,7 +11,9 @@ NouveuaはNVIDIAのオープンソースドライバで、Ubuntuのデフォル�
 
 ただ、筆者は普通にNouveua無効化ステップをすっ飛ばしてNVIDIAドライバを入れても問題なかった（自動で無効化される？）。よう分からんけど、まあ念の為無効化しときましょ。
 
-`lsmod | grep -i nouveau`
+```bash
+lsmod | grep -i nouveau
+```
 
 と入れ、何か表示されるようなら、無効化する。
 
@@ -23,19 +25,25 @@ options nouveau modeset=0
 ```
 ファイルを保存し、以下を実行することで設定を再読込する
 
-`sudo update-initramfs -u`
+```bash
+sudo update-initramfs -u
+```
 
 ## NVIDIAドライバのインストール
 ドライバがすでに入ってないことの確認
 
-`dpkg -l | grep nvidia`
+```bash
+dpkg -l | grep nvidia
+```
 
 と入れ、何も出てこなければOK。このままインストールのステップ(最新バージョンのインストール)に進む。
 
 すでにドライバが入っており、それが古いバージョンの場合は、アップデートするために一度削除する。（古いかどうか確かめる方法は次のステップに後述）
 
 ### すでにあるNVIDIAドライバが古いものか確かめる方法
-`dpkg -l | grep nvidia-driver`
+```bash
+dpkg -l | grep nvidia-driver
+```
 
 と入れる。
 
@@ -56,20 +64,26 @@ driver   : nvidia-driver-560 - third-party non-free recommended
 550より560のほうが新しいので、550を削除して560をインストールする。
 
 ### 古いバージョンの削除
-`sudo apt-get --purge remove nvidia-*`
+```bash
+sudo apt-get --purge remove nvidia-*
+```
 
 ### 最新バージョンのインストール
 #### 自動インストール
 ドライバの選択方法を「手動インストール」にて後述するが、面倒な人は
 
-`sudo ubuntu-drivers autoinstall`
+```bash
+sudo ubuntu-drivers autoinstall
+```
 
 というコマンドで自動で最新のドライバをインストールすることもできる。
 
 #### 手動インストール
 オートでなく手動でやりたい硬派な人は以下を実行する。
 
-`ubuntu-drivers devices |grep recommended`
+```bash
+ubuntu-drivers devices |grep recommended
+```
 
 を入力。
 
@@ -81,7 +95,9 @@ driver   : nvidia-driver-560 - third-party non-free recommended
 
 何も出てこなければ、
 
-`ubuntu-drivers devices`
+```bash
+ubuntu-drivers devices
+```
 
 と入れ、`「nvidia-driver-○○○`」の部分のうち、数値の一番大きいものを選択。
 
@@ -101,7 +117,9 @@ sudo apt install nvidia-driver-○○○
 ### ドライバ起動チェック
 再起動したら、ターミナルから以下を入力し、ドライバが正常にインストールされているか確認する。
 
-`nvidia-smi`
+```bash
+nvidia-smi
+```
 
 ![nvidia-smi-check](img/nvidia_smi_check.png)
 
@@ -110,14 +128,30 @@ sudo apt install nvidia-driver-○○○
 
 # docker, nvidia-docker2, rockerのインストール
 
-`bash install_prerequired.sh`と入れると、docker、nvidia-docker2、rockerが自動でインストールされる。 
+```bash
+bash install_prerequired.sh
+```
+と入れると、docker、nvidia-docker2、rockerが自動でインストールされる。 
 
+# `config.sh`の編集
+
+コンテナやイメージに用いられる設定は`config.sh`において一元的に管理されるので、コンテナ名などを変更したいときにはここから編集すること。
+
+なお、`BASE_IMAGE`と`ROS_DISTRO`を変更することで、ROSのバージョンを変更できる。
 
 # Dockerfileのイメージビルド
 
 ros2 humbleを入れる場合には、以下を実行する。
 
-`bash build_Dockerfile.sh`
+```bash
+bash build_Dockerfile.sh
+```
+
+途中で
+```bash
+ WARN: InvalidDefaultArgInFrom: Default value for ARG nvidia/opengl:${BASE_IMAGE} results in empty or invalid base image name (line 2)  
+```
+のような怒られが発生するが、適切な値が渡されているようなので気にしなくてOK。
 
 初回だと20~30分ほどかかるので、気長に待とう。（2回目以降はキャッシュを用いて早く行われる）
 
@@ -127,7 +161,11 @@ ros2 humbleを入れる場合には、以下を実行する。
 
 # コンテナの作成
 
-`bash create_container.sh`を実行すると、`ros2_humble`という名前のコンテナが作成される。
+```bash
+bash create_container.sh
+```
+
+を実行すると、`ros2_humble`という名前のコンテナが作成される。
 
 以降は`docker start ros2_humble`でコンテナに入ってterminatorを起動できる。
 

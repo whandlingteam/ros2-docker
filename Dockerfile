@@ -1,10 +1,14 @@
-# ベースイメージの設定。タグは https://hub.docker.com/r/nvidia/opengl/tags?name=base-ubuntu から調べる
-FROM nvidia/opengl:base-ubuntu22.04
+ARG BASE_IMAGE
+FROM nvidia/opengl:${BASE_IMAGE}
 
-# ROS2のバージョンを選択（上位のsetup_docker_ros2の項目が優先されるので、ここでなくsetup_docker_ros2.shを変更すること）
 ARG ROS_DISTRO
-ARG IMAGE_NAME
-ARG CONTAINER_WORKSPACE_DIR
+ARG CONTAINER_NAME
+ARG CONTAINER_WORKSPACE
+
+ENV BASE_IMAGE=${BASE_IMAGE}
+ENV ROS_DISTRO=${ROS_DISTRO}
+ENV CONTAINER_WORKSPACE=${CONTAINER_WORKSPACE}
+ENV CONTAINER_NAME=${CONTAINER_NAME}
 
 # 環境変数の設定
 ENV DEBIAN_FRONTEND=noninteractive
@@ -18,10 +22,11 @@ RUN apt-get update && apt-get install -y \
     lsb-release \
     sudo \
     && apt-get clean && rm -rf /var/lib/apt/lists/*
-    
+
 # ROSのリポジトリをsource listに追加
 RUN curl -s https://raw.githubusercontent.com/ros/rosdistro/master/ros.asc | apt-key add - \
     && echo "deb http://packages.ros.org/ros2/ubuntu $(lsb_release -cs) main" > /etc/apt/sources.list.d/ros2-latest.list
+
 
 # ROS2のインストール
 RUN apt-get update && apt-get install -y --no-install-recommends \
@@ -49,7 +54,7 @@ RUN apt-get update && apt-get upgrade -y && \
     rosdep init && \
     rosdep update
 
-# エントリーポイントと必要なスクリプトをイメージ内に設定
+# エントリーポイントと必要なスクリプトをイメージ内(rootディレクトリ配下)に設定
 COPY shell_scripts/ros_entrypoint.sh /
 COPY shell_scripts/start_terminator.sh /
 RUN chmod +x /ros_entrypoint.sh /start_terminator.sh
@@ -58,4 +63,4 @@ RUN chmod +x /ros_entrypoint.sh /start_terminator.sh
 RUN echo "set bell-style none" >> ~/.inputrc
 
 # 再起動時もENTRYPOINTを再実行させる
-ENTRYPOINT ["/bin/bash", "-c", "/ros_entrypoint.sh ${ROS_DISTRO} ${CONTAINER_WORKSPACE_DIR} ${IMAGE_NAME} "]
+ENTRYPOINT ["/bin/bash", "-c", "/ros_entrypoint.sh ${ROS_DISTRO} ${CONTAINER_WORKSPACE} ${CONTAINER_NAME} "]
