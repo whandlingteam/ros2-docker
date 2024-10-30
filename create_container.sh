@@ -1,6 +1,6 @@
 #!/bin/bash
 
-CONTAINER_NAME="ros2_humble"
+CONTAINER_NAME="ros2_humble_test"
 IMAGE_NAME="ros2_humble"
 
 WORKSPACE_DIR="$HOME/ros_ws/${IMAGE_NAME}"
