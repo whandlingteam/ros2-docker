@@ -18,4 +18,5 @@ rocker --nvidia --x11 --network host --privileged --nocleanup --name ${CONTAINER
   --env BASE_IMAGE=${BASE_IMAGE} \
   --env ROS_DISTRO=${ROS_DISTRO} \
   --env IMAGE_NAME=${IMAGE_NAME} \
-  --env CONTAINER_WORKSPACE=${CONTAINER_WORKSPACE} 
+  --env CONTAINER_WORKSPACE=${CONTAINER_WORKSPACE} \
+  --env CONTAINER_NAME=${CONTAINER_NAME}

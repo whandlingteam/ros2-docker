@@ -2,13 +2,11 @@ ARG BASE_IMAGE
 FROM nvidia/opengl:${BASE_IMAGE}
 
 ARG ROS_DISTRO
-ARG CONTAINER_NAME
 ARG CONTAINER_WORKSPACE
 
 ENV BASE_IMAGE=${BASE_IMAGE}
 ENV ROS_DISTRO=${ROS_DISTRO}
 ENV CONTAINER_WORKSPACE=${CONTAINER_WORKSPACE}
-ENV CONTAINER_NAME=${CONTAINER_NAME}
 
 # 環境変数の設定
 ENV DEBIAN_FRONTEND=noninteractive
@@ -63,4 +61,4 @@ RUN chmod +x /ros_entrypoint.sh /start_terminator.sh
 RUN echo "set bell-style none" >> ~/.inputrc
 
 # 再起動時もENTRYPOINTを再実行させる
-ENTRYPOINT ["/bin/bash", "-c", "/ros_entrypoint.sh ${ROS_DISTRO} ${CONTAINER_WORKSPACE} ${CONTAINER_NAME} "]
+ENTRYPOINT ["/ros_entrypoint.sh"]

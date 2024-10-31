@@ -19,6 +19,10 @@ echo ROS_DISTRO=${ROS_DISTRO}
 echo CONTAINER_WORKSPACE=${CONTAINER_WORKSPACE}
 echo IMAGE_NAME=${IMAGE_NAME}
 
-docker build -t ${IMAGE_NAME} --build-arg BASE_IMAGE=${BASE_IMAGE} --build-arg ROS_DISTRO=${ROS_DISTRO} --build-arg CONTAINER_NAME=${CONTAINER_NAME} --build-arg CONTAINER_WORKSPACE=${CONTAINER_WORKSPACE} .
+docker build -t ${IMAGE_NAME} \
+  --build-arg BASE_IMAGE=${BASE_IMAGE} \
+  --build-arg ROS_DISTRO=${ROS_DISTRO} \
+  --build-arg CONTAINER_WORKSPACE=${CONTAINER_WORKSPACE} \
+  .
 
 echo "Image built successfully!"

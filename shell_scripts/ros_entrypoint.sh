@@ -9,9 +9,9 @@
 # 
 # http://www.apache.org/licenses/LICENSE-2.0
 
-ROS_DISTRO=$1
-CONTAINER_WORKSPACE=$2
-CONTAINER_NAME=$3 # start_terminator.sh内で利用
+ROS_DISTRO=${ROS_DISTRO}
+CONTAINER_WORKSPACE=${CONTAINER_WORKSPACE}
+CONTAINER_NAME=${CONTAINER_NAME} # start_terminator.sh内で利用
 
 # ROSの環境を設定
 if [ -f "/opt/ros/${ROS_DISTRO}/setup.bash" ]; then
@@ -39,7 +39,7 @@ fi
 
 # ターミナルが存在しない場合（再attach時）に Terminator を再起動
 if ! pgrep -x "terminator" > /dev/null; then
-    bash /start_terminator.sh ${CONTAINER_NAME}
+    bash /start_terminator.sh
 fi
 
 # 終了せずに常駐プロセスを保持
