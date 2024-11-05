@@ -1,5 +1,5 @@
 # コンテナ名。ホスト側から作業ディレクトリ名として設定され、terminatorのウィンドウ名にも反映される。
-CONTAINER_NAME=ros2_humble_test_2
+CONTAINER_NAME=ros2_humble
 
 # イメージの基本設定
 # ベースイメージの設定。タグは https://hub.docker.com/r/nvidia/opengl/tags?name=base-ubuntu から調べる
