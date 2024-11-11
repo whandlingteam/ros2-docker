@@ -1,3 +1,6 @@
+ROS2をdockerでちゃちゃっと試したり、複数バージョンのROS2が混在する環境において管理しやすいようにするリポジトリ。
+ROS1用リポジトリは現在整備中。。。
+
 今回はros2用のコンテナ内でGPUが使用できるようにするが、CUDAのインストールには関知しない。
 仮にコンテナ内でcudaを用いたい場合は、別途インストールすること。
 
@@ -179,7 +182,7 @@ bash install_prerequired.sh
 
 ```bash
 # コンテナ名。ホスト側から作業ディレクトリ名として設定され、terminatorのウィンドウ名にも反映される。
-CONTAINER_NAME=ros2_humble
+CONTAINER_NAME=ros2-humble
 
 # イメージの基本設定
 # ベースイメージの設定。タグは https://hub.docker.com/r/nvidia/opengl/tags?name=base-ubuntu から調べる
@@ -188,8 +191,6 @@ ROS_DISTRO=humble
 ```
 
 # Dockerfileのイメージビルド
-
-
 
 ```bash
 bash build_Dockerfile.sh
@@ -203,7 +204,7 @@ bash build_Dockerfile.sh
 
 初回だと20~30分ほどかかるので、気長に待とう。（2回目以降はキャッシュを用いて早く行われる）
 
-完了後、`docker images ls -a`を入れると、以下のように`ros2_humble`というイメージが作成されていることが確認できる。
+完了後、`docker images ls -a`を入れると、以下のように`ros2-humble`というイメージが作成されていることが確認できる。（以降はコンテナ名が`ros2-humble`であることを前提に話を進める）
 
 `build_Dockerfile.sh`の`IMAGE_NAME`を変更して、新たなイメージを作成することもできる。
 
@@ -213,51 +214,166 @@ bash build_Dockerfile.sh
 bash create_container.sh
 ```
 
-を実行すると、`ros2_humble`という名前のコンテナが作成される。
+を実行すると、`config.sh`内で定義した`CONTAINER_NAME`の`ros2-humble`という名前のコンテナが作成され、Terminatorが立ち上がる。
 
-以降は`docker start ros2_humble`でコンテナに入ってterminatorを起動できる。
+TerminatorはROSのように複数プロセスを同時に扱う上で非常に便利なので、使い方は各自で調べておこう！（参考: [ターミナル環境の構築: Terminatorのインストール](https://ryonakagami.github.io/2020/12/22/ubuntu-terminator/)）
 
-終了するときは、ホスト側に`docker stop ros2_humble`を入れる。
-
-Ctrl+CやCtrl+D、他にもCtrl+P→Ctrl+Qなどでコンテナから抜けることはできるが、コンテナ自体はバックグラウンドで動いたままなので、`docker stop ros2_humble`を入れてコンテナを停止させること。
 
 # 動作確認
-さきほどイメージを作成した際に自動でコンテナに入っているので、以下のコマンドを実行して動作確認を行う。
+新たに立ち上がったTerminator内で動作確認を行う。
 
-`rviz2`
+## ROS2が入っているか確認
 
-と入れると、ホスト側の画面に`rviz2`が表示される（`rviz2`と打ったターミナルでCtrl+Cを押すとrviz2を閉じられる）。
+```powershell
+root@sharge-disk-v3ma002:~# ls
+colcon_ws
+root@sharge-disk-v3ma002:~# cd colcon_ws/
+root@sharge-disk-v3ma002:~/colcon_ws# ros2 topic list 
+/parameter_events
+/rosout
+```
 
-次に、`nvidia-smi`を入れdockerコンテナ内からGPUの情報を取得できることを確認する。（添付画像において`docker attach humble`をしてもユーザー名が変わっていない点に関しては無視してください）
+## nvidiaドライバを認識できているかも確認
 
-![nvidia-smi-from-docker-image](img/nvidia_smi_from_docker_image.png)
+```bash
+root@sharge-disk-v3ma002:~/colcon_ws# nvidia-smi
+Mon Nov 11 02:57:19 2024       
++-----------------------------------------------------------------------------------------+
+| NVIDIA-SMI 560.35.03              Driver Version: 560.35.03      CUDA Version: N/A      |
+|-----------------------------------------+------------------------+----------------------+
+| GPU  Name                 Persistence-M | Bus-Id          Disp.A | Volatile Uncorr. ECC |
+| Fan  Temp   Perf          Pwr:Usage/Cap |           Memory-Usage | GPU-Util  Compute M. |
+|                                         |                        |               MIG M. |
+|=========================================+========================+======================|
+|   0  NVIDIA GeForce RTX 4060 ...    Off |   00000000:01:00.0  On |                  N/A |
+| N/A   40C    P8              2W /   20W |      80MiB /   8188MiB |     54%      Default |
+|                                         |                        |                  N/A |
++-----------------------------------------+------------------------+----------------------+
+                                                                                         
++-----------------------------------------------------------------------------------------+
+| Processes:                                                                              |
+|  GPU   GI   CI        PID   Type   Process name                              GPU Memory |
+|        ID   ID                                                               Usage      |
+|=========================================================================================|
++-----------------------------------------------------------------------------------------+
 
-また、Ctrl+Dを押すと、コンテナから抜けることができる(Dはdetachの略で、単に抜けるだけでありバックグラウンドプロセスとして動いていることに注意)。
+```
 
-コンテナを終了させたいときは、`exit`と入れればいい。
+## GUIアプリの起動確認
 
-# 2回目以降のコンテナの立ち上げ方
+ホスト側の画面に`rviz2`が表示される（`rviz2`と打ったターミナルでCtrl+Cを押すとrviz2を閉じられる）。
+
+```powershell
+root@sharge-disk-v3ma002:~/colcon_ws# rviz2
+```
+
+
+## ディレクトリのマウントの確認
+
+`create_container.sh`において一部のコンテナ側ディレクトリがホスト側のディレクトリにマウント（直結）されるよう設定されている。
+
+なお、ホスト側ディレクトリ（`${HOST_WORKSPACE}/build`等）は自動作成されるので、ユーザーがあらかじめ準備しておく必要はない。
+
+```bash
+# コンテナの実行
+docker run -itd \
+  ...
+  # ROS2関連
+  -v ${HOST_WORKSPACE}/build:${CONTAINER_WORKSPACE}/build \
+  -v ${HOST_WORKSPACE}/install:${CONTAINER_WORKSPACE}/install \
+  -v ${HOST_WORKSPACE}/log:${CONTAINER_WORKSPACE}/log \
+  -v ${HOST_WORKSPACE}/src:${CONTAINER_WORKSPACE}/src \
+  # Terminator設定ファイル
+  -v ${DEV_WS}/config/terminator:/root/.config/terminator \
+  ...
+```
+
+ちなみにホスト側ワークスペース（`HOST_WORKSPACE`）やコンテナ側ワークスペース（`CONTAINER_WORKSPACE`）は`config.sh`において
+
+```bash
+CONTAINER_NAME=ros2-humble
+HOST_WORKSPACE=${HOME}/ros_ws/${CONTAINER_NAME}
+CONTAINER_WORKSPACE=/root/colcon_ws
+DEV_WS=${HOME}/dev_ws
+```
+
+と指定され、上記の場合`HOST_WORKSPACE`は`~/ros_ws/ros2-humble`、`CONTAINER_WORKSPACE`は`/root/colcon_ws`となる。
+
+試しに`-v ${HOST_WORKSPACE}/src:${CONTAINER_WORKSPACE}/src`の部分が適切にマウントされてるか検証しよう。
+
+コンテナ側のターミナルにおいて、`~/colcon_ws/src`に移動し、`HelloWorld`というファイルを作成する。
+```powershell
+root@sharge-disk-v3ma002:~# cd colcon_ws/
+root@sharge-disk-v3ma002:~/colcon_ws# ls
+build  install  log  src
+root@sharge-disk-v3ma002:~/colcon_ws# cd src/
+root@sharge-disk-v3ma002:~/colcon_ws/src# touch HelloWorld
+root@sharge-disk-v3ma002:~/colcon_ws/src# ls
+HelloWorld
+```
+
+次に、ホスト側ターミナルから先ほどのファイルが見えるか確認する（ここではCLIでやっているが、当然ホスト側なので「ファイル」からGUI操作してもOK）
+```bash
+$ ls ~/ros_ws/ros2-humble/src/
+HelloWorld
+```
+
+次に、ホスト側から`HelloWorld`を消してみる
+
+```bash
+$ rm -f ~/ros_ws/ros2-humble/src/HelloWorld 
+```
+
+コンテナ側から`HelloWorld`が消えていることを確認
+
+```powershell
+root@sharge-disk-v3ma002:~/colcon_ws/src# find HelloWorld
+find: ‘HelloWorld’: No such file or directory
+```
+# コンテナの終了
+終了するときは、ホスト側ターミナルにおいて`docker stop ros2-humble`を入れる。（15秒ほどかかるので、すぐに反応が返ってこなくても焦らないこと）
+
+コンテナのTerminatorのバツを押してTerminatorを終了することでコンテナから抜けることはできるが、コンテナ自体はバックグラウンドで動いたまま。`docker stop ros2-humble`を入れてコンテナを停止させること。
+
+なお、間違えてTerminatorをバツボタンで終了させてしまったときはホスト側ターミナルから
+```bash
+$ bash restart_container.sh
+(terminator:181): dbind-WARNING **: 03:02:22.099: Couldn't connect to accessibility bus: Failed to connect to socket /run/user/1000/at-spi/bus_1: No such file or directory
+ConfigBase::load: Unable to open /etc/xdg/terminator/config ([Errno 2] No such file or directory: '/etc/xdg/terminator/config')
+Gtk-Message: 03:02:22.143: Failed to load module "canberra-gtk-module"
+Unable to connect to DBUS Server, proceeding as standalone
+Unable to load Keybinder module. This means the hide_window shortcut will be unavailable
+Unable to bind hide_window key, another instance/window has it.
+ActivityWatch plugin unavailable as we cannot import Notify
+PluginRegistry::load_plugins: Importing plugin activitywatch.py failed: module 'activitywatch' has no attribute 'AVAILABLE'
+PluginRegistry::load_plugins: Importing plugin command_notify.py failed: Namespace Notify not available
+```
+を実行する、なんか色々エラーっぽいのが表示されるが実行には問題ない。
+
+# バックグラウンドで稼働中のコンテナの確認
 
 `docker ps -a`を入れると、コンテナの一覧が表示される。(`ps`はprocessの略で、オプション`-a`は全てのコンテナを表示するためのもの)
 
-![docker-ps](img/docker_ps.png)
+```bash
+$ docker container ps -a
+CONTAINER ID   IMAGE                    COMMAND                CREATED          STATUS         PORTS     NAMES
+09b5ccb3791d   ros2_humble:latest       "/ros_entrypoint.sh"   19 minutes ago   Up 8 seconds             ros2-humble
+```
 
 `STATUS`の列が`Exited~`になっていれば、正常に終了している。
 
-もしも`STATUS`が`Up~`になっている場合は、バックグラウンドで動いているので、`docker stop humble`と入れてコンテナを停止させる。
+もしも`STATUS`が`Up~`になっている場合は、バックグラウンドで動いているので、`docker stop ros2-humble`と入れてコンテナを停止させる。
 
-コンテナを再度立ち上げたいときは、`docker start humble`と入れればいい。
+# 2回目以降のコンテナの立ち上げ方
+コンテナを再度立ち上げたいときは、`docker start ros2-humble`と入れればいい。
 
-`docker start humble`だけでは立ち上げるのみでコンテナに入れないので、続けて`docker attach humble`と入れることでコンテナに入ることができる。
-
-コンテナを削除したい場合は、`docker rm ros2_humble`と入れる。なお、実行中(STATUSがexited~でない)のコンテナは削除できないので、`docker ps -a`で確認し、必要ならば`docker stop humble`を入れてから削除すること。(`docker rm -f ros2_humble`と入れると強制削除できるが、おすすめしない)
-
-コンテナ内で複数ターミナルを実行したい場合、`terminator`と入力する。terminatorはROSを使う上で非常に便利なので使い方は各自で調べておこう！
+# コンテナの削除
+コンテナを削除したい場合は、`docker rm ros2-humble`と入れる。なお、実行中(STATUSがexited~でない)のコンテナは削除できないので、`docker ps -a`で確認し、必要ならば`docker stop ros2-humble`を入れてから削除すること。(`docker rm -f ros2-humble`と入れると強制削除できるが、おすすめしない)
 
 参考文献: 
 
-- [https://qiita.com/memristor09/items/4cf351a16629f7ddc377](https://qiita.com/memristor09/items/4cf351a16629f7ddc377)
+- [Docker・rocker でGUIとGPUが使えるROS 2 Humbleの環境を作る](https://qiita.com/porizou1/items/76980fbd0d1675eecf7f)
 
-- [https://qiita.com/porizou1/items/76980fbd0d1675eecf7f](https://qiita.com/porizou1/items/76980fbd0d1675eecf7f)
+- [Docker環境でTerminatorを使えるようにする](https://qiita.com/memristor09/items/4cf351a16629f7ddc377)
 
-- [https://qiita.com/porizou1/items/8bf56efc3307e40624af](https://qiita.com/porizou1/items/8bf56efc3307e40624af)
+- [Dockerコンテナ内の ROS 2 環境でRealSense D435を使用する](https://qiita.com/porizou1/items/8bf56efc3307e40624af)
