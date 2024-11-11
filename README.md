@@ -1,5 +1,3 @@
-
-
 今回はros2用のコンテナ内でGPUが使用できるようにするが、CUDAのインストールには関知しない。
 仮にコンテナ内でcudaを用いたい場合は、別途インストールすること。
 
@@ -9,7 +7,7 @@
 NouveuaはNVIDIAのオープンソースドライバで、Ubuntuのデフォルトで使われているが、NVIDIAのGPUを使うときには非推奨。
 このステップを無視していきなりNVIDIAドライバを入れると、Nouveuaと競合してしまい、GPUが使えなくなる可能性があるらしい。
 
-ただ、筆者は普通にNouveua無効化ステップをすっ飛ばしてNVIDIAドライバを入れても問題なかった（自動で無効化される？）。よう分からんけど、まあ念の為無効化しときましょ。
+ただ、筆者は普通にNouveua無効化ステップをすっ飛ばしてNVIDIAドライバを入れても問題なかった（自動で無効化される？）。まあ念の為無効化しときましょう。
 
 ```bash
 lsmod | grep -i nouveau
@@ -38,7 +36,7 @@ dpkg -l | grep nvidia
 
 と入れ、何も出てこなければOK。このままインストールのステップ(最新バージョンのインストール)に進む。
 
-すでにドライバが入っており、それが古いバージョンの場合は、アップデートするために一度削除する。（古いかどうか確かめる方法は次のステップに後述）
+すでにドライバが入っており、それが古いバージョンの場合は、アップデートするために一度削除する。（古いかどうか確かめる方法は[次のステップ](#古いバージョンの削除)に後述）
 
 ### すでにあるNVIDIAドライバが古いものか確かめる方法
 ```bash
@@ -82,16 +80,15 @@ sudo ubuntu-drivers autoinstall
 オートでなく手動でやりたい硬派な人は以下を実行する。
 
 ```bash
-ubuntu-drivers devices |grep recommended
+$ ubuntu-drivers devices |grep recommended
 ```
-
-を入力。
 
 ```bash
-driver   : nvidia-driver-560 - third-party non-free recommended
+driver   : nvidia-driver-565 - third-party non-free recommended
 ```
 
-が出てきたら、「`nvidia-driver-560`」の部分をメモしておく。
+と出るので
+「`nvidia-driver-560`」の部分をメモしておく。
 
 何も出てこなければ、
 
@@ -101,7 +98,28 @@ ubuntu-drivers devices
 
 と入れ、`「nvidia-driver-○○○`」の部分のうち、数値の一番大きいものを選択。
 
-![nvidia-driver](img/nvidia_driver.png)
+```bash
+$ ubuntu-drivers devices
+== /sys/devices/pci0000:00/0000:00:01.0/0000:01:00.0 ==
+modalias : pci:v000010DEd000028A0sv00001558sd00001460bc03sc00i00
+vendor   : NVIDIA Corporation
+driver   : nvidia-driver-535-open - distro non-free
+driver   : nvidia-driver-560-open - third-party non-free
+driver   : nvidia-driver-545 - third-party non-free
+driver   : nvidia-driver-545-open - distro non-free
+driver   : nvidia-driver-535 - third-party non-free
+driver   : nvidia-driver-555 - third-party non-free
+driver   : nvidia-driver-535-server-open - distro non-free
+driver   : nvidia-driver-550 - third-party non-free
+driver   : nvidia-driver-550-open - third-party non-free
+driver   : nvidia-driver-565 - third-party non-free recommended
+driver   : nvidia-driver-565-open - third-party non-free
+driver   : nvidia-driver-535-server - distro non-free
+driver   : nvidia-driver-555-open - third-party non-free
+driver   : nvidia-driver-560 - third-party non-free
+driver   : nvidia-driver-525 - third-party non-free
+driver   : xserver-xorg-video-nouveau - distro free builtin
+```
 
 以下を実行する（○○○の部分は適宜変更すること）
 
@@ -112,18 +130,38 @@ sudo apt install nvidia-driver-○○○
 ```
 インストールを終えたら、再起動することでドライバのインストールが完了する。
 
-`sudo reboot`
+```bash
+sudo reboot
+```
 
 ### ドライバ起動チェック
 再起動したら、ターミナルから以下を入力し、ドライバが正常にインストールされているか確認する。
 
 ```bash
-nvidia-smi
+$ nvidia-smi
+Mon Nov 11 11:20:05 2024       
++-----------------------------------------------------------------------------------------+
+| NVIDIA-SMI 560.35.03              Driver Version: 560.35.03      CUDA Version: 12.6     |
+|-----------------------------------------+------------------------+----------------------+
+| GPU  Name                 Persistence-M | Bus-Id          Disp.A | Volatile Uncorr. ECC |
+| Fan  Temp   Perf          Pwr:Usage/Cap |           Memory-Usage | GPU-Util  Compute M. |
+|                                         |                        |               MIG M. |
+|=========================================+========================+======================|
+|   0  NVIDIA GeForce RTX 4060 ...    Off |   00000000:01:00.0  On |                  N/A |
+| N/A   40C    P5              5W /   20W |      80MiB /   8188MiB |     20%      Default |
+|                                         |                        |                  N/A |
++-----------------------------------------+------------------------+----------------------+
+                                                                                         
++-----------------------------------------------------------------------------------------+
+| Processes:                                                                              |
+|  GPU   GI   CI        PID   Type   Process name                              GPU Memory |
+|        ID   ID                                                               Usage      |
+|=========================================================================================|
+|    0   N/A  N/A      3246      G   /usr/lib/xorg/Xorg                             69MiB |
++-----------------------------------------------------------------------------------------+
 ```
 
-![nvidia-smi-check](img/nvidia_smi_check.png)
-
-参考: https://qiita.com/porizou1/items/74d8264d6381ee2941bd
+参考: [ubuntuにCUDA、nvidiaドライバをインストールするメモ](https://qiita.com/porizou1/items/74d8264d6381ee2941bd)
 
 
 # docker, nvidia-docker2, rockerのインストール
@@ -137,11 +175,21 @@ bash install_prerequired.sh
 
 コンテナやイメージに用いられる設定は`config.sh`において一元的に管理されるので、コンテナ名などを変更したいときにはここから編集すること。
 
-なお、`BASE_IMAGE`と`ROS_DISTRO`を変更することで、ROSのバージョンを変更できる。
+なお、`BASE_IMAGE`と`ROS_DISTRO`を変更することで、ROSのバージョンを変更できる（以下はROS2のhumbleの場合）。
+
+```bash
+# コンテナ名。ホスト側から作業ディレクトリ名として設定され、terminatorのウィンドウ名にも反映される。
+CONTAINER_NAME=ros2_humble
+
+# イメージの基本設定
+# ベースイメージの設定。タグは https://hub.docker.com/r/nvidia/opengl/tags?name=base-ubuntu から調べる
+BASE_IMAGE="base-ubuntu22.04"
+ROS_DISTRO=humble
+```
 
 # Dockerfileのイメージビルド
 
-ros2 humbleを入れる場合には、以下を実行する。
+
 
 ```bash
 bash build_Dockerfile.sh
@@ -206,17 +254,10 @@ Ctrl+CやCtrl+D、他にもCtrl+P→Ctrl+Qなどでコンテナから抜ける�
 
 コンテナ内で複数ターミナルを実行したい場合、`terminator`と入力する。terminatorはROSを使う上で非常に便利なので使い方は各自で調べておこう！
 
-参考: 
+参考文献: 
 
-https://cryborg.hatenablog.com/entry/2016/09/03/164940
+- [https://qiita.com/memristor09/items/4cf351a16629f7ddc377](https://qiita.com/memristor09/items/4cf351a16629f7ddc377)
 
-https://note.com/shirakawa_lab/n/n4f28232cb7c9
+- [https://qiita.com/porizou1/items/76980fbd0d1675eecf7f](https://qiita.com/porizou1/items/76980fbd0d1675eecf7f)
 
-https://qiita.com/memristor09/items/4cf351a16629f7ddc377
-
-
-その他参考サイト
-
-https://qiita.com/porizou1/items/76980fbd0d1675eecf7f
-
-https://qiita.com/porizou1/items/8bf56efc3307e40624af
+- [https://qiita.com/porizou1/items/8bf56efc3307e40624af](https://qiita.com/porizou1/items/8bf56efc3307e40624af)
