@@ -19,6 +19,8 @@ echo ROS_DISTRO=${ROS_DISTRO}
 echo CONTAINER_WORKSPACE=${CONTAINER_WORKSPACE}
 echo IMAGE_NAME=${IMAGE_NAME}
 
+sudo chmod 666 /var/run/docker.sock
+
 docker build -t ${IMAGE_NAME} \
   --build-arg BASE_IMAGE=${BASE_IMAGE} \
   --build-arg ROS_DISTRO=${ROS_DISTRO} \
