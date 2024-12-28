@@ -167,12 +167,12 @@ Mon Nov 11 11:20:05 2024
 参考: [ubuntuにCUDA、nvidiaドライバをインストールするメモ](https://qiita.com/porizou1/items/74d8264d6381ee2941bd)
 
 
-# docker, nvidia-docker2のインストール
+# docker, NVIDIA Container Toolkitのインストール
 
 ```bash
 bash install_prerequired.sh
 ```
-と入れると、docker、nvidia-docker2が自動でインストールされる。 
+と入れると、docker、NVIDIA Container Toolkitが自動でインストールされる。 
 
 # `config.sh`の編集
 

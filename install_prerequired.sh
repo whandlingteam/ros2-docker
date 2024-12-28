@@ -22,14 +22,13 @@ sudo apt-get update
 sudo apt-get install -y docker-ce
 echo ""
 
-# Install NVIDIA Docker 2
-echo "Installing nvidia-docker2"
-curl -fsSL https://nvidia.github.io/nvidia-docker/gpgkey | sudo gpg --dearmor -o /usr/share/keyrings/nvidia-docker-keyring.gpg
-# Add the NVIDIA Docker repository using the keyring
-curl -fsSL https://nvidia.github.io/nvidia-docker/$distribution/nvidia-docker.list | \
-    sed 's#deb https://#deb [signed-by=/usr/share/keyrings/nvidia-docker-keyring.gpg] https://#' | \
-    sudo tee /etc/apt/sources.list.d/nvidia-docker.list > /dev/null
-sudo apt-get update
-sudo apt-get install -y nvidia-docker2
-sudo systemctl restart docker
-echo ""
+# Install NVIDIA Container Toolkit
+echo "Installing NVIDIA Container Toolkit"
+curl -fsSL https://nvidia.github.io/libnvidia-container/gpgkey | sudo gpg --dearmor -o /usr/share/keyrings/nvidia-container-toolkit-keyring.gpg
+curl -s -L https://nvidia.github.io/libnvidia-container/stable/deb/nvidia-container-toolkit.list | \
+sed 's#deb https://#deb [signed-by=/usr/share/keyrings/nvidia-container-toolkit-keyring.gpg] https://#g' | \
+sudo tee /etc/apt/sources.list.d/nvidia-container-toolkit.list
+sudo apt update
+sudo apt install nvidia-container-toolkit -y
+systemctl restart docker.service
+echo "NVIDIA container toolkit installed!"
