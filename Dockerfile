@@ -38,10 +38,10 @@ RUN apt-get update && apt-get install -y --no-install-recommends \
 RUN apt-get update && apt-get install -y --no-install-recommends \
     python3-colcon-common-extensions \
     python3-rosdep \
-    gazebo \
-    ros-${ROS_DISTRO}-gazebo-* \
-    ros-${ROS_DISTRO}-rqt-* \
-    ros-${ROS_DISTRO}-plotjuggler-ros \
+    # gazebo \
+    # ros-${ROS_DISTRO}-gazebo-* \
+    # ros-${ROS_DISTRO}-rqt-* \
+    # ros-${ROS_DISTRO}-plotjuggler-ros \
     terminator \
     && \
     apt-get clean && \

@@ -1,10 +1,10 @@
 # コンテナ名。ホスト側から作業ディレクトリ名として設定され、terminatorのウィンドウ名にも反映される。
-CONTAINER_NAME=ros2-humble
+CONTAINER_NAME=ros2-foxy-bridge
 
 # イメージの基本設定
 # ベースイメージの設定。タグは https://hub.docker.com/r/nvidia/opengl/tags?name=base-ubuntu から調べる
-BASE_IMAGE="base-ubuntu22.04"
-ROS_DISTRO=humble
+BASE_IMAGE="base-ubuntu20.04"
+ROS_DISTRO=foxy
 IMAGE_NAME=ros2_${ROS_DISTRO}
 
 # ホスト側PCの設定
